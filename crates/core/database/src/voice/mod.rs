@@ -412,7 +412,9 @@ pub async fn sync_voice_permissions(
     server: Option<&Server>,
     role_id: Option<&str>,
 ) -> Result<()> {
-    let node = get_channel_node(channel.id()).await?.unwrap();
+    let Some(node) = get_channel_node(channel.id()).await? else {
+        return Ok(());
+    };
 
     for user_id in get_voice_channel_members(channel.id())
         .await?
@@ -454,9 +456,9 @@ pub async fn sync_user_voice_permissions(
             .as_ref()
             .is_none_or(|member| member.roles.iter().any(|r| r == role_id))
     }) {
-        let voice_state = get_voice_state(channel_id, server_id, &user.id)
-            .await?
-            .unwrap();
+        let Some(voice_state) = get_voice_state(channel_id, server_id, &user.id).await? else {
+            return Ok(());
+        };
 
         let mut query = DatabasePermissionQuery::new(db, user)
             .channel(channel)
