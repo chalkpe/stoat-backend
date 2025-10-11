@@ -232,7 +232,9 @@ impl<T, E: std::fmt::Debug> ToRevoltError<T> for Result<T, E> {
         let loc = Location::caller();
 
         self
-            .map_err(|_| {
+            .map_err(|e| {
+                log::error!("{e:?}");
+
                 Error {
                     error_type: ErrorType::InternalError,
                     location: format!("{}:{}:{}", loc.file(), loc.line(), loc.column())
