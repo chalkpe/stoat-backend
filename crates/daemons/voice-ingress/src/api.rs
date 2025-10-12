@@ -214,42 +214,59 @@ pub async fn ingress(
             // forbid any size which goes over the limit and also limit the aspect ratio to stop people from making too tall or too wide and bypassing the limit.
             // TODO: figure out how to track audio stream quality
 
-            if event.event == "track_published"
-                && (track.r#type == TrackType::Data as i32
-                    || (track.r#type == TrackType::Video as i32
-                        && (user_limits.video_resolution[0] != 0
-                            && user_limits.video_resolution[1] != 0
-                            && track.width * track.height
-                                > user_limits.video_resolution[0]
-                                    * user_limits.video_resolution[1])
-                        || (user_limits.video_aspect_ratio[0]
-                            != user_limits.video_aspect_ratio[1]
-                            && !(user_limits.video_aspect_ratio[0]
-                                ..=user_limits.video_aspect_ratio[1])
-                                .contains(&(track.width as f32 / track.height as f32)))))
-            {
-                log::debug!("Removing user {user_id} from channel {channel_id} {event:?} due to forbidden track.");
+            if event.event == "track_published" {
+                let mut disconnect = false;
 
-                voice_client.remove_user(node, user_id, channel_id).await?;
-                delete_voice_state(channel_id, channel.server(), user_id).await?;
-            } else {
-                let partial = update_voice_state_tracks(
-                    channel_id,
-                    channel.server(),
-                    user_id,
-                    event.event == "track_published", // to avoid duplicating this entire case twice
-                    track.source,
-                )
-                .await?;
+                if track.r#type == TrackType::Data as i32 {
+                    log::debug!("User published data");
+                    disconnect = true;
+                };
 
-                EventV1::UserVoiceStateUpdate {
-                    id: user_id.clone(),
-                    channel_id: channel_id.clone(),
-                    data: partial,
-                }
-                .p(channel_id.clone())
-                .await;
+                if track.r#type == TrackType::Video as i32 {
+                    if user_limits.video_resolution[0] != 0
+                        && user_limits.video_resolution[1] != 0
+                        && track.width * track.height
+                            > user_limits.video_resolution[0] * user_limits.video_resolution[1]
+                    {
+                        log::debug!("User published video with out of bounds resolution");
+                        disconnect = true;
+                    };
+
+                    if user_limits.video_aspect_ratio[0] != user_limits.video_aspect_ratio[1]
+                        && !(user_limits.video_aspect_ratio[0]..=user_limits.video_aspect_ratio[1])
+                            .contains(&(track.width as f32 / track.height as f32))
+                    {
+                        log::debug!("User published video with out of bounds aspect ratio");
+                        disconnect = true;
+                    };
+                };
+
+                if disconnect {
+                    log::debug!("Removing user {user_id} from channel {channel_id} {event:?} due to forbidden track.");
+
+                    voice_client.remove_user(node, user_id, channel_id).await?;
+                    delete_voice_state(channel_id, channel.server(), user_id).await?;
+
+                    return Ok(EmptyResponse);
+                };
+            };
+
+            let partial = update_voice_state_tracks(
+                channel_id,
+                channel.server(),
+                user_id,
+                event.event == "track_published", // to avoid duplicating this entire case twice
+                track.source,
+            )
+            .await?;
+
+            EventV1::UserVoiceStateUpdate {
+                id: user_id.clone(),
+                channel_id: channel_id.clone(),
+                data: partial,
             }
+            .p(channel_id.clone())
+            .await;
         }
         _ => {}
     };
