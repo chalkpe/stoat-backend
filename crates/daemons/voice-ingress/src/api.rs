@@ -228,6 +228,8 @@ pub async fn ingress(
                                 ..=user_limits.video_aspect_ratio[1])
                                 .contains(&(track.width as f32 / track.height as f32)))))
             {
+                log::debug!("Removing user {user_id} from channel {channel_id} {event:?} due to forbidden track.");
+
                 voice_client.remove_user(node, user_id, channel_id).await?;
                 delete_voice_state(channel_id, channel.server(), user_id).await?;
             } else {
