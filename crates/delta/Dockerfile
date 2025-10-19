@@ -4,7 +4,7 @@ FROM debian:12 AS debian
 
 # Bundle Stage
 FROM gcr.io/distroless/cc-debian12:nonroot
-COPY --from=builder /home/rust/src/target/release/revolt-delta ./
+COPY --from=builder /home/rust/src/target/debug/revolt-delta ./
 COPY --from=debian /usr/bin/uname /usr/bin/uname
 
 EXPOSE 14702
