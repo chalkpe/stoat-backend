@@ -699,14 +699,20 @@ impl Message {
                             Channel::DirectMessage { recipients, .. }
                             | Channel::Group { recipients, .. } => recipients.clone(),
                             Channel::TextChannel { ref server, .. } => {
-                                BulkDatabasePermissionQuery::from_server_id(db, server)
-                                    .await
-                                    .channel(channel)
-                                    .members_can_see_channel()
-                                    .await
-                                    .iter()
-                                    .filter_map(|(key, &value)| if value { Some(key.clone()) } else { None })
-                                    .collect()
+                                let valid_members = db.fetch_all_members(server.as_str()).await;
+                                if let Ok(valid_members) = valid_members {
+                                    BulkDatabasePermissionQuery::from_server_id(db, server)
+                                        .await
+                                        .channel(channel)
+                                        .members(&valid_members)
+                                        .members_can_see_channel()
+                                        .await
+                                        .iter()
+                                        .filter_map(|(key, &value)| if value { Some(key.clone()) } else { None })
+                                        .collect()
+                                } else {
+                                    vec![]
+                                }
                             }
                             _ => vec![],
                         },
