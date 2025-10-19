@@ -38,7 +38,7 @@ jobs:
           cache-to: type=gha,scope=buildx-base-multi-arch,mode=max
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.event_name != 'pull_request'
     name: Publish Docker images
     steps:
