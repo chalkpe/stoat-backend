@@ -697,8 +697,17 @@ impl Message {
                         self.clone(),
                         match channel {
                             Channel::DirectMessage { recipients, .. }
-                            | Channel::Group { recipients, .. }
-                            | Channel::TextChannel { recipients, .. } => recipients.clone(),
+                            | Channel::Group { recipients, .. } => recipients.clone(),
+                            Channel::TextChannel { ref server, .. } => {
+                                BulkDatabasePermissionQuery::from_server_id(db, server)
+                                    .await
+                                    .channel(channel)
+                                    .members_can_see_channel()
+                                    .await
+                                    .iter()
+                                    .filter_map(|(key, &value)| if value { Some(key.clone()) } else { None })
+                                    .collect()
+                            }
                             _ => vec![],
                         },
                         false, // branch already dictates this
