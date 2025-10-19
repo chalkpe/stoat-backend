@@ -47,7 +47,7 @@ deps() {
     tee crates/services/january/src/main.rs |
     tee crates/services/gifbox/src/main.rs |
     tee crates/daemons/crond/src/main.rs |
-    tee crates/daemons/pushd/src/main.rs |
+    tee crates/daemons/pushd/src/main.rs
     # tee crates/daemons/voice-ingress/src/main.rs
   echo '' |
     tee crates/core/config/src/lib.rs |
