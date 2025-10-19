@@ -681,9 +681,7 @@ impl Message {
         )
         .await?;
 
-        if !self.has_suppressed_notifications()
-            && (self.mentions.is_some() || self.contains_mass_push_mention())
-        {
+        if !self.has_suppressed_notifications() {
             // send Push notifications
             #[cfg(feature = "tasks")]
             tasks::ack::queue_message(
