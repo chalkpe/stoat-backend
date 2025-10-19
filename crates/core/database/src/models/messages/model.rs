@@ -697,10 +697,8 @@ impl Message {
                         self.clone(),
                         match channel {
                             Channel::DirectMessage { recipients, .. }
-                            | Channel::Group { recipients, .. } => recipients.clone(),
-                            Channel::TextChannel { .. } => {
-                                self.mentions.clone().unwrap_or_default()
-                            }
+                            | Channel::Group { recipients, .. }
+                            | Channel::TextChannel { recipients, .. } => recipients.clone(),
                             _ => vec![],
                         },
                         false, // branch already dictates this
