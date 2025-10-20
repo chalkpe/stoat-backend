@@ -150,15 +150,12 @@ impl FcmOutboundConsumer {
             }
 
             PayloadKind::MessageNotification(alert) => {
-                let title = self.format_title(&alert);
+                let mut data: HashMap<String, Value> = HashMap::new();
+                data.insert("payload".to_string(), Value::String(serde_json::to_string(&alert).unwrap()));
 
                 let msg = Message {
                     token: Some(payload.token),
-                    notification: Some(Notification {
-                        title: Some(title),
-                        body: Some(alert.body),
-                        image: Some(alert.icon),
-                    }),
+                    data: Some(data),
                     android: Some(AndroidConfig {
                         collapse_key: Some(alert.tag),
                         ..Default::default()
