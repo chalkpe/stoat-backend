@@ -678,6 +678,7 @@ impl Message {
         )
         .await?;
 
+        let author_id = author.id().to_string();
 
         if !self.has_suppressed_notifications() {
             // send Push notifications
@@ -708,7 +709,7 @@ impl Message {
                                         .members_can_see_channel()
                                         .await
                                         .iter()
-                                        .filter_map(|(key, &value)| if value { Some(key.clone()) } else { None })
+                                        .filter_map(|(key, &value)| if value && key != &author_id { Some(key.clone()) } else { None })
                                         .collect()
                                 } else {
                                     vec![]
