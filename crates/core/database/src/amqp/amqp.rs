@@ -1,12 +1,9 @@
-use std::collections::HashSet;
-
 use crate::events::rabbit::*;
 use crate::User;
 use amqprs::channel::BasicPublishArguments;
 use amqprs::{channel::Channel, connection::Connection, error::Error as AMQPError};
 use amqprs::{BasicProperties, FieldTable};
 use revolt_models::v0::PushNotification;
-use revolt_presence::filter_online;
 
 use serde_json::to_string;
 
@@ -137,11 +134,6 @@ impl AMQP {
         }
 
         let config = revolt_config::config().await;
-
-        let online_ids = filter_online(&recipients).await;
-        let recipients = (&recipients.into_iter().collect::<HashSet<String>>() - &online_ids)
-            .into_iter()
-            .collect::<Vec<String>>();
 
         let payload = MessageSentPayload {
             notification: payload,

@@ -11,31 +11,11 @@ use fcm_v1::{
     Client, Error as FcmError,
 };
 use revolt_database::{events::rabbit::*, Database};
-use revolt_models::v0::{Channel, PushNotification};
 use serde_json::Value;
 
 pub struct FcmOutboundConsumer {
     db: Database,
     client: Client,
-}
-
-impl FcmOutboundConsumer {
-    fn format_title(&self, notification: &PushNotification) -> String {
-        // ideally this changes depending on context
-        // in a server, it would look like "Sendername, #channelname in servername"
-        // in a group, it would look like "Sendername in groupname"
-        // in a dm it should just be "Sendername".
-        // not sure how feasible all those are given the PushNotification object as it currently stands.
-
-        match &notification.channel {
-            Channel::DirectMessage { .. } => notification.author.clone(),
-            Channel::Group { name, .. } => format!("{}, #{}", notification.author, name),
-            Channel::TextChannel { name, .. } | Channel::VoiceChannel { name, .. } => {
-                format!("{} in #{}", notification.author, name)
-            }
-            _ => "Unknown".to_string(),
-        }
-    }
 }
 
 impl FcmOutboundConsumer {
