@@ -592,7 +592,7 @@ impl Message {
 
         // Send the message
         message
-            .send(db, amqp, author, user, member, &channel, generate_embeds)
+            .send(db, amqp, author, user, &member, &channel, generate_embeds)
             .await?;
 
         Ok(message)
@@ -664,7 +664,7 @@ impl Message {
         _amqp: Option<&AMQP>, // this is optional mostly for tests.
         author: MessageAuthor<'_>,
         user: Option<v0::User>,
-        member: Option<v0::Member>,
+        member: &Option<v0::Member>,
         channel: &Channel,
         generate_embeds: bool,
     ) -> Result<()> {
@@ -688,7 +688,7 @@ impl Message {
                     messages: vec![(
                         Some(
                             PushNotification::from(
-                                self.clone().into_model(user, member),
+                                self.clone().into_model(user, member.clone()),
                                 Some(author),
                                 channel.to_owned().into(),
                             )
@@ -708,7 +708,7 @@ impl Message {
                                         .members_can_see_channel()
                                         .await
                                         .iter()
-                                        .filter_map(|(key, &value)| if value { Some(key.clone()) } else { None })
+                                        .filter_map(|(key, &value)| if value && member.clone().is_some_and(|m| m.id.user != *key) { Some(key.clone()) } else { None })
                                         .collect()
                                 } else {
                                     vec![]
