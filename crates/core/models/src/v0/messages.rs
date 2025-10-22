@@ -337,7 +337,7 @@ auto_derived!(
     #[cfg_attr(feature = "validator", derive(Validate))]
     pub struct DataEditMessage {
         /// New message content
-        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 2000)))]
+        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 50000)))]
         pub content: Option<String>,
         /// Embeds to include in the message
         #[cfg_attr(feature = "validator", validate(length(min = 0, max = 10)))]
