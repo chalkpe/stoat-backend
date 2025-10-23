@@ -127,13 +127,23 @@ impl AMQP {
     pub async fn message_sent(
         &self,
         recipients: Vec<String>,
-        payload: PushNotification,
+        mut payload: PushNotification,
     ) -> Result<(), AMQPError> {
         if recipients.is_empty() {
             return Ok(());
         }
 
         let config = revolt_config::config().await;
+
+        // Spoiler handling
+        if payload.body.contains("||") {
+            payload.body = "(스포일러)".to_string();
+        }
+        if let Some(ref content) = payload.message.content {
+            if content.contains("||") {
+                payload.message.content = Some("(스포일러)".to_string());
+            }
+        }
 
         let payload = MessageSentPayload {
             notification: payload,
