@@ -698,7 +698,8 @@ impl Message {
                         self.clone(),
                         match channel {
                             Channel::DirectMessage { recipients, .. }
-                            | Channel::Group { recipients, .. } => recipients.clone(),
+                            | Channel::Group { recipients, .. } => recipients.iter().filter(|&id| id != &author_id).cloned().collect(),
+
                             Channel::TextChannel { ref server, .. } => {
                                 let valid_members = db.fetch_all_members(server.as_str()).await;
                                 if let Ok(valid_members) = valid_members {
