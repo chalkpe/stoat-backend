@@ -49,6 +49,14 @@ pub async fn member_experimental_query(
         return Err(create_error!(NotFound));
     }
 
+    // Return empty list for official servers
+    if server.is_official() {
+        return Ok(Json(MemberQueryResponse {
+            members: vec![],
+            users: vec![],
+        }));
+    }
+
     let mut members = db.fetch_all_members(&server.id).await?;
 
     let mut user_ids = vec![];

@@ -24,6 +24,14 @@ pub async fn fetch_all(
         return Err(create_error!(NotFound));
     }
 
+    // Return empty list for official servers
+    if server.is_official() {
+        return Ok(Json(v0::AllMemberResponse {
+            members: vec![],
+            users: vec![],
+        }));
+    }
+
     let mut members = db.fetch_all_members(&server.id).await?;
 
     let user_ids: Vec<String> = members
