@@ -48,7 +48,7 @@ auto_derived!(
             server_banner: Option<File>,
             /// Enum of server flags
             #[serde(skip_serializing_if = "Option::is_none")]
-            server_flags: Option<i32>,
+            server_flags: Option<u32>,
             /// Id of server channel
             channel_id: String,
             /// Name of server channel

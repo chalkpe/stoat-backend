@@ -117,6 +117,13 @@ auto_derived!(
         Banner,
     }
 
+    /// Flags that may be attributed to a server
+    #[repr(u32)]
+    pub enum ServerFlags {
+        Official = 1,
+        Verified = 2,
+    }
+
     /// Optional fields on server object
     pub enum FieldsRole {
         Colour,
@@ -237,7 +244,7 @@ auto_derived!(
 
         /// Bitfield of server flags
         #[cfg_attr(feature = "validator", serde(skip_serializing_if = "Option::is_none"))]
-        pub flags: Option<i32>,
+        pub flags: Option<u32>,
 
         // Whether this server is age-restricted
         // nsfw: Option<bool>,

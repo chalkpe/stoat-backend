@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use revolt_models::v0::{self, DataCreateServerChannel};
+use revolt_models::v0::{self, DataCreateServerChannel, ServerFlags};
 use revolt_permissions::{OverrideField, DEFAULT_PERMISSION_SERVER};
 use revolt_result::Result;
 use ulid::Ulid;
@@ -50,7 +50,7 @@ auto_derived_partial!(
 
         /// Bitfield of server flags
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub flags: Option<i32>,
+        pub flags: Option<u32>,
 
         /// Whether this server is flagged as not safe for work
         #[serde(skip_serializing_if = "crate::if_false", default)]
@@ -178,6 +178,26 @@ impl Server {
         server.channels = channels.iter().map(|c| c.id().to_string()).collect();
         db.insert_server(&server).await?;
         Ok((server, channels))
+    }
+
+    /// Whether this server is official
+    pub fn is_official(&self) -> bool {
+        if let Some(flags) = self.flags {
+            let flags = ServerFlagsValue(flags);
+            flags.has(ServerFlags::Official)
+        } else {
+            false
+        }
+    }
+
+    /// Whether this server is verified
+    pub fn is_verified(&self) -> bool {
+        if let Some(flags) = self.flags {
+            let flags = ServerFlagsValue(flags);
+            flags.has(ServerFlags::Verified)
+        } else {
+            false
+        }
     }
 
     /// Update server data
@@ -393,6 +413,30 @@ impl SystemMessageChannels {
         }
 
         ids
+    }
+}
+
+pub struct ServerFlagsValue(pub u32);
+
+impl ServerFlagsValue {
+    pub fn has(&self, flag: ServerFlags) -> bool {
+        self.has_value(flag as u32)
+    }
+    pub fn has_value(&self, bit: u32) -> bool {
+        let mask = 1 << bit;
+        self.0 & mask == mask
+    }
+
+    pub fn set(&mut self, flag: ServerFlags, toggle: bool) -> &mut Self {
+        self.set_value(flag as u32, toggle)
+    }
+    pub fn set_value(&mut self, bit: u32, toggle: bool) -> &mut Self {
+        if toggle {
+            self.0 |= 1 << bit;
+        } else {
+            self.0 &= !(1 << bit);
+        }
+        self
     }
 }
 
