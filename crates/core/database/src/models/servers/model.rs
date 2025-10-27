@@ -183,8 +183,8 @@ impl Server {
     /// Whether this server is official
     pub fn is_official(&self) -> bool {
         if let Some(flags) = self.flags {
-            flags & ServerFlags::Official as u32
-                == ServerFlags::Official as u32
+            let flags = ServerFlagsValue(flags);
+            flags.has(ServerFlags::Official)
         } else {
             false
         }

@@ -120,8 +120,8 @@ auto_derived!(
     /// Flags that may be attributed to a server
     #[repr(u32)]
     pub enum ServerFlags {
-        Official = 1,
-        Verified = 2,
+        Verified = 1,
+        Official = 2,
     }
 
     /// Optional fields on server object
