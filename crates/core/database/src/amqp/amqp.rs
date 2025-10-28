@@ -136,11 +136,11 @@ impl AMQP {
         let config = revolt_config::config().await;
 
         // Spoiler handling
-        if payload.body.contains("[[") && payload.body.contains("]]") {
+        if (payload.body.contains("[[") || payload.body.contains("\\[\\[")) && (payload.body.contains("]]") || payload.body.contains("\\]\\]")) {
             payload.body = "(스포일러)".to_string();
         }
         if let Some(ref content) = payload.message.content {
-            if content.contains("[[") && content.contains("]]") {
+            if (content.contains("[[") || content.contains("\\[\\[")) && (content.contains("]]") || content.contains("\\]\\]")) {
                 payload.message.content = Some("(스포일러)".to_string());
             }
         }
