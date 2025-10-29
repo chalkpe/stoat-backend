@@ -692,6 +692,17 @@ impl Message {
                                 self.clone().into_model(user, member),
                                 Some(author),
                                 channel.to_owned().into(),
+                                match channel {
+                                    Channel::TextChannel { ref server, .. }
+                                    | Channel::VoiceChannel { ref server, .. } => {
+                                        let server = db.fetch_server(server.as_str()).await;
+                                        match server {
+                                            Ok(server) => Some(server.name),
+                                            Err(_) => None,
+                                        }
+                                    }
+                                    _ => None,
+                                },
                             )
                             .await,
                         ),

@@ -209,6 +209,9 @@ auto_derived!(
         pub message: Message,
         /// The channel object itself, for clients to process
         pub channel: Channel,
+        /// Optional server name, for clients to process
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub server: Option<String>,
     }
 
     /// Representation of a text embed before it is sent.
@@ -451,7 +454,7 @@ impl From<SystemMessage> for String {
 
 impl PushNotification {
     /// Create a new notification from a given message, author and channel ID
-    pub async fn from(msg: Message, author: Option<MessageAuthor<'_>>, channel: Channel) -> Self {
+    pub async fn from(msg: Message, author: Option<MessageAuthor<'_>>, channel: Channel, server: Option<String>) -> Self {
         let config = config().await;
 
         let icon = if let Some(author) = &author {
@@ -501,7 +504,7 @@ impl PushNotification {
         Self {
             author: author
                 .map(|x| x.username().to_string())
-                .unwrap_or_else(|| "Revolt".to_string()),
+                .unwrap_or_else(|| "Toast".to_string()),
             icon,
             image,
             body,
@@ -510,6 +513,7 @@ impl PushNotification {
             url: format!("{}/channel/{}/{}", config.hosts.app, channel.id(), msg.id),
             message: msg,
             channel,
+            server,
         }
     }
 }
