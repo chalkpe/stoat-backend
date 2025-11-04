@@ -5,7 +5,7 @@ use amqprs::{channel::Channel as AmqpChannel, consumer::AsyncConsumer, BasicProp
 use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use fcm_v1::{
-    android::AndroidConfig,
+    android::{AndroidConfig, AndroidMessagePriority},
     auth::{Authenticator, ServiceAccountKey},
     message::{Message, Notification},
     Client, Error as FcmError,
@@ -131,12 +131,16 @@ impl FcmOutboundConsumer {
 
             PayloadKind::MessageNotification(alert) => {
                 let mut data: HashMap<String, Value> = HashMap::new();
-                data.insert("payload".to_string(), Value::String(serde_json::to_string(&alert).unwrap()));
+                data.insert(
+                    "payload".to_string(),
+                    Value::String(serde_json::to_string(&alert).unwrap()),
+                );
 
                 let msg = Message {
                     token: Some(payload.token),
                     data: Some(data),
                     android: Some(AndroidConfig {
+                        priority: Some(AndroidMessagePriority::High),
                         collapse_key: Some(alert.tag),
                         ..Default::default()
                     }),
