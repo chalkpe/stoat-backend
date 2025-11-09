@@ -179,6 +179,9 @@ pub async fn client(db: &'static Database, stream: TcpStream, addr: SocketAddr) 
     // Clean up presence session.
     let last_session = delete_session(&user_id, session_id).await;
 
+    // Clean up open channels for this session
+    clear_session_open_channels(&user_id, &state.session_id).await;
+
     // If this was the last session, notify other users that we just went offline.
     if last_session {
         state.broadcast_presence_change(false).await;
@@ -505,5 +508,25 @@ async fn worker(
                 }
             }
         }
+    }
+}
+
+/// Clear all open channels for a user session when WebSocket disconnects
+async fn clear_session_open_channels(user_id: &str, session_id: &str) {
+    use redis_kiss::{get_connection, AsyncCommands};
+
+    if let Ok(mut conn) = get_connection().await {
+        let session_key = format!("open_channels:{}:{}", user_id, session_id);
+
+        if let Err(err) = conn.del::<&str, ()>(&session_key).await {
+            error!("Failed to clear session channels: {:?}", err);
+        } else {
+            info!(
+                "Cleared open channels for user {} session {}",
+                user_id, session_id
+            );
+        }
+    } else {
+        error!("Failed to get Redis connection for clearing session channels");
     }
 }

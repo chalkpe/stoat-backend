@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::events::rabbit::*;
 use crate::User;
 use amqprs::channel::BasicPublishArguments;
@@ -6,6 +8,42 @@ use amqprs::{BasicProperties, FieldTable};
 use revolt_models::v0::PushNotification;
 
 use serde_json::to_string;
+
+/// Filter out users who are currently viewing the channel
+async fn filter_viewers(recipients: &[String], channel_id: &str) -> HashSet<String> {
+    use redis_kiss::{get_connection, AsyncCommands};
+
+    let mut viewer_ids = HashSet::new();
+
+    // Get Redis connection
+    let Ok(mut conn) = get_connection().await else {
+        warn!("Failed to get Redis connection for filtering viewers");
+        return viewer_ids;
+    };
+
+    for user_id in recipients {
+        let session_pattern = format!("open_channels:{}:*", user_id);
+
+        // Get all session keys for this user
+        let Ok(keys): Result<Vec<String>, _> = conn.keys(&session_pattern).await else {
+            continue;
+        };
+
+        // Check if any session has this channel open
+        for key in keys {
+            let Ok(members): Result<HashSet<String>, _> = conn.smembers(&key).await else {
+                continue;
+            };
+
+            if members.contains(channel_id) {
+                viewer_ids.insert(user_id.clone());
+                break;
+            }
+        }
+    }
+
+    viewer_ids
+}
 
 #[derive(Clone)]
 pub struct AMQP {
@@ -134,22 +172,43 @@ impl AMQP {
         }
 
         let config = revolt_config::config().await;
+        let channel_id = payload.channel.id().to_string();
 
         // Spoiler handling
-        if (payload.body.contains("[[") || payload.body.contains("\\[\\[")) && (payload.body.contains("]]") || payload.body.contains("\\]\\]")) {
+        if (payload.body.contains("[[") || payload.body.contains("\\[\\["))
+            && (payload.body.contains("]]") || payload.body.contains("\\]\\]"))
+        {
             payload.body = "(스포일러)".to_string();
         }
         if let Some(ref content) = payload.message.content {
-            if (content.contains("[[") || content.contains("\\[\\[")) && (content.contains("]]") || content.contains("\\]\\]")) {
+            if (content.contains("[[") || content.contains("\\[\\["))
+                && (content.contains("]]") || content.contains("\\]\\]"))
+            {
                 payload.message.content = Some("(스포일러)".to_string());
             }
         }
 
         let payload = MessageSentPayload {
             notification: payload,
-            users: recipients,
+            users: recipients.clone(),
         };
         let payload = to_string(&payload).unwrap();
+
+        // Filter out users who are currently viewing the channel
+        let viewer_ids = filter_viewers(&recipients, &channel_id).await;
+        let recipients = (&recipients.into_iter().collect::<HashSet<String>>() - &viewer_ids)
+            .into_iter()
+            .collect::<Vec<String>>();
+
+        // If all recipients are viewing the channel, don't send notifications
+        if recipients.is_empty() {
+            debug!(
+                "Everyone is viewing channel {}, not sending notification: {}",
+                config.pushd.get_message_routing_key(),
+                payload
+            );
+            return Ok(());
+        }
 
         debug!(
             "Sending message payload on channel {}: {}",

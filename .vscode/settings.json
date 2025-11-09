@@ -1,6 +1,9 @@
 {
   "editor.formatOnSave": true,
   "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.diagnostics.disabled": [
+    "macro-error"
+  ],
   "nixEnvSelector.suggestion": false,
   "nixEnvSelector.nixFile": "${workspaceFolder}/default.nix"
 }
