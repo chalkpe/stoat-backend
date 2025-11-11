@@ -7,6 +7,7 @@ use amqprs::{channel::Channel, connection::Connection, error::Error as AMQPError
 use amqprs::{BasicProperties, FieldTable};
 use revolt_models::v0::PushNotification;
 
+use log::{debug, info, warn};
 use serde_json::to_string;
 
 /// Filter out users who are currently viewing the channel
@@ -26,21 +27,29 @@ async fn filter_viewers(recipients: &[String], channel_id: &str) -> HashSet<Stri
 
         // Get all session keys for this user
         let Ok(keys): Result<Vec<String>, _> = conn.keys(&session_pattern).await else {
+            debug!("No session keys found for user {}", user_id);
             continue;
         };
 
         // Check if any session has this channel open
         for key in keys {
             let Ok(members): Result<HashSet<String>, _> = conn.smembers(&key).await else {
+                debug!("Failed to get members for key {}", key);
                 continue;
             };
 
             if members.contains(channel_id) {
+                debug!(
+                    "User {} is currently viewing channel {}",
+                    user_id, channel_id
+                );
                 viewer_ids.insert(user_id.clone());
                 break;
             }
         }
     }
+
+    debug!("Filtered viewer IDs: {:?}", viewer_ids);
 
     viewer_ids
 }
