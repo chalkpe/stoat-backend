@@ -197,12 +197,6 @@ impl AMQP {
             }
         }
 
-        let payload = MessageSentPayload {
-            notification: payload,
-            users: recipients.clone(),
-        };
-        let payload = to_string(&payload).unwrap();
-
         // Filter out users who are currently viewing the channel
         let viewer_ids = filter_viewers(&recipients, &channel_id).await;
         let recipients = (&recipients.into_iter().collect::<HashSet<String>>() - &viewer_ids)
@@ -212,12 +206,17 @@ impl AMQP {
         // If all recipients are viewing the channel, don't send notifications
         if recipients.is_empty() {
             debug!(
-                "Everyone is viewing channel {}, not sending notification: {}",
-                config.pushd.get_message_routing_key(),
-                payload
+                "Everyone is viewing channel {}, not sending notification",
+                channel_id
             );
             return Ok(());
         }
+
+        let message_payload = MessageSentPayload {
+            notification: payload,
+            users: recipients.clone(),
+        };
+        let payload = to_string(&message_payload).unwrap();
 
         debug!(
             "Sending message payload on channel {}: {}",
