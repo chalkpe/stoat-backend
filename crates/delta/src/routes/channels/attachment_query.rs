@@ -38,7 +38,7 @@ pub async fn query(
         after,
     } = options;
 
-    // Fetch messages with attachments and flatten them
+    // Fetch messages with attachments, paginated by message ID
     let messages = db
         .fetch_messages(MessageQuery {
             filter: MessageFilter {
@@ -55,10 +55,19 @@ pub async fn query(
         })
         .await?;
 
-    let attachments: Vec<_> = messages
+    // Flatten attachments from messages, setting message_id on each
+    let attachments = messages
         .into_iter()
-        .flat_map(|msg| msg.attachments.unwrap_or_default())
-        .map(Into::into)
+        .flat_map(|msg| {
+            let message_id = msg.id.clone();
+            msg.attachments
+                .unwrap_or_default()
+                .into_iter()
+                .map(move |mut file| {
+                    file.message_id = Some(message_id.clone());
+                    file.into()
+                })
+        })
         .collect();
 
     Ok(Json(BulkAttachmentsResponse { attachments }))

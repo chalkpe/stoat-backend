@@ -67,11 +67,11 @@ auto_derived!(
         /// Maximum number of attachments to fetch
         #[cfg_attr(feature = "validator", validate(range(min = 1, max = 100)))]
         pub limit: Option<i64>,
-        /// File id before which attachments should be fetched
-        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 128)))]
+        /// Message id before which attachments should be fetched
+        #[cfg_attr(feature = "validator", validate(length(min = 26, max = 26)))]
         pub before: Option<String>,
-        /// File id after which attachments should be fetched
-        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 128)))]
+        /// Message id after which attachments should be fetched
+        #[cfg_attr(feature = "validator", validate(length(min = 26, max = 26)))]
         pub after: Option<String>,
     }
 
