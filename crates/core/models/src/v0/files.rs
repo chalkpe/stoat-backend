@@ -4,6 +4,8 @@ use validator::Validate;
 #[cfg(feature = "rocket")]
 use rocket::FromForm;
 
+use super::MessageSort;
+
 auto_derived!(
     /// File
     pub struct File {
@@ -73,6 +75,8 @@ auto_derived!(
         /// Message id after which attachments should be fetched
         #[cfg_attr(feature = "validator", validate(length(min = 26, max = 26)))]
         pub after: Option<String>,
+        /// Message sort direction
+        pub sort: Option<MessageSort>,
     }
 
     /// Bulk Attachments Response

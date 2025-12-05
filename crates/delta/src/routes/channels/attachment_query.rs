@@ -2,7 +2,7 @@ use revolt_database::{
     util::{permissions::DatabasePermissionQuery, reference::Reference},
     Database, MessageFilter, MessageQuery, MessageTimePeriod, User,
 };
-use revolt_models::v0::{self, BulkAttachmentsResponse, MessageSort};
+use revolt_models::v0::{self, BulkAttachmentsResponse};
 use revolt_permissions::{calculate_channel_permissions, ChannelPermission};
 use revolt_result::{create_error, Result};
 use rocket::{serde::json::Json, State};
@@ -36,6 +36,7 @@ pub async fn query(
         limit,
         before,
         after,
+        sort,
     } = options;
 
     // Fetch messages with attachments, paginated by message ID
@@ -49,7 +50,7 @@ pub async fn query(
             time_period: MessageTimePeriod::Absolute {
                 before,
                 after,
-                sort: Some(MessageSort::Latest),
+                sort,
             },
             limit,
         })
