@@ -1,6 +1,7 @@
 use revolt_rocket_okapi::revolt_okapi::openapi3::OpenApi;
 use rocket::Route;
 
+mod attachment_query;
 mod channel_ack;
 mod channel_activity;
 mod channel_delete;
@@ -31,6 +32,7 @@ mod webhook_fetch_all;
 
 pub fn routes() -> (Vec<Route>, OpenApi) {
     openapi_get_routes_spec![
+        attachment_query::query,
         channel_ack::ack,
         channel_activity::update_activity,
         channel_fetch::fetch,

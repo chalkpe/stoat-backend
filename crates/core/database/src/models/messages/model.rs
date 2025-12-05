@@ -185,6 +185,8 @@ auto_derived!(
         pub query: Option<String>,
         /// Search for pinned
         pub pinned: Option<bool>,
+        /// Filter messages with attachments
+        pub has_attachments: Option<bool>,
     }
 
     /// Message Query

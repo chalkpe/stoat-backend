@@ -1,3 +1,9 @@
+#[cfg(feature = "validator")]
+use validator::Validate;
+
+#[cfg(feature = "rocket")]
+use rocket::FromForm;
+
 auto_derived!(
     /// File
     pub struct File {
@@ -52,5 +58,26 @@ auto_derived!(
         Video { width: usize, height: usize },
         /// File is audio
         Audio,
+    }
+
+    /// Options for querying attachments
+    #[cfg_attr(feature = "validator", derive(Validate))]
+    #[cfg_attr(feature = "rocket", derive(FromForm))]
+    pub struct OptionsQueryAttachments {
+        /// Maximum number of attachments to fetch
+        #[cfg_attr(feature = "validator", validate(range(min = 1, max = 100)))]
+        pub limit: Option<i64>,
+        /// File id before which attachments should be fetched
+        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 128)))]
+        pub before: Option<String>,
+        /// File id after which attachments should be fetched
+        #[cfg_attr(feature = "validator", validate(length(min = 1, max = 128)))]
+        pub after: Option<String>,
+    }
+
+    /// Bulk Attachments Response
+    pub struct BulkAttachmentsResponse {
+        /// List of attachments
+        pub attachments: Vec<File>,
     }
 );

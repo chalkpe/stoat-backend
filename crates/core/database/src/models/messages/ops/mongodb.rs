@@ -55,6 +55,16 @@ impl AbstractMessages for MongoDb {
             filter.insert("pinned", pinned);
         };
 
+        if let Some(true) = query.filter.has_attachments {
+            filter.insert(
+                "attachments",
+                doc! {
+                    "$exists": true,
+                    "$ne": []
+                },
+            );
+        }
+
         // 2. Find query limit
         let limit = query.limit.unwrap_or(50);
 

@@ -62,6 +62,12 @@ impl AbstractMessages for ReferenceDb {
                     }
                 }
 
+                if let Some(true) = query.filter.has_attachments {
+                    if message.attachments.as_ref().is_none_or(|a| a.is_empty()) {
+                        return false;
+                    }
+                }
+
                 true
             })
             .cloned()
