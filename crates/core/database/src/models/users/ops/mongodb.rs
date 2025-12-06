@@ -339,6 +339,27 @@ impl AbstractUsers for MongoDb {
             .map_err(|_| create_database_error!("update_one", "sessions"))
     }
 
+    /// Remove duplicate FCM subscriptions for a user (keep only the new one)
+    async fn remove_duplicate_fcm_subscriptions(&self, user_id: &str, fcm_token: &str) -> Result<()> {
+        // Find all sessions with the same FCM token for this user
+        self.col::<User>("sessions")
+            .update_many(
+                doc! {
+                    "user_id": user_id,
+                    "subscription.auth": fcm_token,
+                    "subscription.endpoint": "fcm"
+                },
+                doc! {
+                    "$unset": {
+                        "subscription": 1
+                    }
+                },
+            )
+            .await
+            .map(|_| ())
+            .map_err(|_| create_database_error!("update_many", "sessions"))
+    }
+
     async fn update_session_last_seen(&self, session_id: &str, when: Timestamp) -> Result<()> {
         let formatted: &str = &when.format();
 

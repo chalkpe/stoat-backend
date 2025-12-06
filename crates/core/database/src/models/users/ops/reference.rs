@@ -170,6 +170,11 @@ impl AbstractUsers for ReferenceDb {
         todo!()
     }
 
+    /// Remove duplicate FCM subscriptions for a user (keep only the new one)
+    async fn remove_duplicate_fcm_subscriptions(&self, _user_id: &str, _fcm_token: &str) -> Result<()> {
+        Ok(())
+    }
+
     async fn update_session_last_seen(&self, _session_id: &str, _when: Timestamp) -> Result<()> {
         todo!()
     }

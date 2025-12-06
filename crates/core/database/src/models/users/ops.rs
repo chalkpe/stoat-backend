@@ -64,5 +64,12 @@ pub trait AbstractUsers: Sync + Send {
     /// Remove push subscription for a session by session id (TODO: remove)
     async fn remove_push_subscription_by_session_id(&self, session_id: &str) -> Result<()>;
 
+    /// Remove duplicate FCM subscriptions for a user (keep only the new one)
+    async fn remove_duplicate_fcm_subscriptions(
+        &self,
+        user_id: &str,
+        fcm_token: &str,
+    ) -> Result<()>;
+
     async fn update_session_last_seen(&self, session_id: &str, when: Timestamp) -> Result<()>;
 }
