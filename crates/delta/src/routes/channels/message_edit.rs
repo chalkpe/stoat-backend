@@ -2,7 +2,7 @@ use iso8601_timestamp::Timestamp;
 use revolt_database::{
     tasks,
     util::{permissions::DatabasePermissionQuery, reference::Reference},
-    Database, Message, PartialMessage, User,
+    Database, Interactions, Message, PartialMessage, User,
 };
 use revolt_models::v0::{self, Embed};
 use revolt_permissions::{calculate_channel_permissions, ChannelPermission};
@@ -81,6 +81,23 @@ pub async fn edit(
     }
 
     partial.embeds = Some(new_embeds);
+
+    // 4. Handle interactions update
+    if let Some(interactions) = edit.interactions {
+        let interactions: Interactions = interactions.into();
+
+        if interactions.restrict_reactions
+            && interactions
+                .reactions
+                .as_ref()
+                .is_none_or(|list| list.is_empty())
+        {
+            return Err(create_error!(InvalidProperty));
+        }
+
+        interactions.validate(db, &permissions).await?;
+        partial.interactions = Some(interactions);
+    }
 
     message.update(db, partial, vec![]).await?;
 

@@ -345,6 +345,8 @@ auto_derived!(
         /// Embeds to include in the message
         #[cfg_attr(feature = "validator", validate(length(min = 0, max = 10)))]
         pub embeds: Option<Vec<SendableEmbed>>,
+        /// Information about how this message should be interacted with
+        pub interactions: Option<Interactions>,
     }
 
     /// Options for bulk deleting messages
