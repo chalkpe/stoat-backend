@@ -282,6 +282,17 @@ pub async fn create_thumbnail(image: DynamicImage, tag: &str) -> Vec<u8> {
     // thumbnail doesn't have terrible quality
     // so we use thumbnail
     let image = image.thumbnail(image.width().min(*w as u32), image.height().min(*h as u32));
+    let image = match image {
+        DynamicImage::ImageRgb8(_) => image,
+        DynamicImage::ImageRgba8(_) => image,
+        _ => {
+            if image.color().has_alpha() {
+                image.to_rgba8().into()
+            } else {
+                image.to_rgb8().into()
+            }
+        }
+    };
 
     // Encode it into WEBP
     let encoder = webp::Encoder::from_image(&image).expect("Could not create encoder.");
