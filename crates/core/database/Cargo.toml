@@ -16,7 +16,7 @@ mongodb = ["dep:mongodb", "bson", "authifier/database-mongodb"]
 tasks = ["isahc", "linkify", "url-escape"]
 async-std-runtime = ["async-std", "authifier/async-std-runtime"]
 rocket-impl = ["rocket", "schemars", "revolt_okapi", "revolt_rocket_okapi", "authifier/rocket_impl"]
-axum-impl = ["axum"]
+axum-impl = ["dep:axum", "revolt-result/axum"]
 redis-is-patched = ["revolt-presence/redis-is-patched"]
 
 # Default Features
