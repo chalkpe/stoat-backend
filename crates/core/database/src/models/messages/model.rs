@@ -682,6 +682,9 @@ impl Message {
 
         let author_id = author.id().to_string();
 
+        // Auto-ack for the message author so self-sent messages don't appear unread
+        channel.ack(&author_id, &self.id).await?;
+
         if !self.has_suppressed_notifications() {
             // send Push notifications
             #[cfg(feature = "tasks")]
