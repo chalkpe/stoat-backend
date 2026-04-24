@@ -21,6 +21,7 @@ use serde::Serialize;
 // region: payload
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct MessagePayload<'a> {
     aps: APS<'a>,
     #[serde(skip_serializing)]
@@ -30,11 +31,8 @@ struct MessagePayload<'a> {
 
     message: &'a Message,
     url: &'a str,
-    #[serde(rename = "camelCase")]
     author_avatar: &'a str,
-    #[serde(rename = "camelCase")]
     author_display_name: &'a str,
-    #[serde(rename = "camelCase")]
     channel_name: &'a str,
 }
 
